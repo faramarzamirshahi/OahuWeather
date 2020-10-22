@@ -18,6 +18,7 @@ The process renders the index.html as the base router<br>
 ```
 
 ```
+@app.route("/")
 def welcome():
     return render_template('index.html')
 ```
