@@ -4,6 +4,19 @@ Weather analysis for Oahu Hawaii
 # Description
 The `weather_analysis.py` is a Flask application<br>
 The process renders the index.html as the base router<br>
+`index.html`
+```
+</head>
+<body>
+    <h1>Welcome to the Climate Analysis API</h1>
+    <h3>Available Routes:</h3>
+    <a href={{url_for('precipitation')}}>precipitation</a></br>
+    <a href={{url_for('stations')}}>stations</a></br>
+    <a href={{url_for('temp_monthly')}}>temperature oberservations</a></br>
+    <a href={{url_for('report')}}>Summary statistics report</a>
+</body>
+```
+
 ```
 def welcome():
     return render_template('index.html')
@@ -15,7 +28,7 @@ The route is decorated with the function:<br>
 def precipitation():
     session = Session(engine)
 ```
-The most complex route is `report` function where we specify a method to set the variables in the web form and pass it to python<br>
+The most complex route is `report` function where we specify a method to set the variables in the web form and pass it to `stats` function<br>
 ```
 @app.route("/api/v1.0/report",methods = ['POST', 'GET'])
 def report():
