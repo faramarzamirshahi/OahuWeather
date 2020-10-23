@@ -11,6 +11,9 @@ from sqlalchemy import create_engine, func
 # Add flask dependencies
 from flask import Flask, jsonify, render_template, request, redirect, url_for
 
+# debug toolbar
+from flask_debugtoolbar import DebugToolbarExtension
+
 # example: engine = create_engine('sqlite:///C:\\path\\to\\foo.db')
 engine = create_engine("sqlite:///hawaii.sqlite")
 
@@ -23,8 +26,6 @@ Base.prepare(engine, reflect=True)
 # Create reference to the classes
 Measurement = Base.classes.measurement
 Station = Base.classes.station
-
-session = Session(engine)
 
 # Set up Flask application
 app = Flask(__name__)
@@ -47,6 +48,7 @@ def precipitation():
     prev_year = dt.date(2017, 8, 23) - dt.timedelta(days=365)
     precipitation = session.query(Measurement.date, Measurement.prcp).\
     filter(Measurement.date >= prev_year).all()
+    session.close()
     precip = {date: prcp for date, prcp in precipitation}
     return jsonify(precip)
 
@@ -55,6 +57,7 @@ def precipitation():
 def stations():
     session = Session(engine)
     results = session.query(Station.station).all()
+    session.close()
     # unravel the results into a one-dimensional array
     stations = list(np.ravel(results))
     return jsonify(stations=stations)
@@ -67,6 +70,7 @@ def temp_monthly():
     results = session.query(Measurement.tobs).\
     filter(Measurement.station == 'USC00519281').\
     filter(Measurement.date >= prev_year).all()
+    session.close()
     temps = list(np.ravel(results))
     return jsonify(temps=temps)
 
@@ -87,23 +91,26 @@ def report():
 def stats(start=None, end=None):
     # to avoid SQLite objects created in a thread can only be used in that same thread
     # we re-create the session variable locally in the function
-    session = Session(engine)
+
     sel = [func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)]           
 
-    if not end: 
+    if not end:
+        session = Session(engine) 
         results = session.query(*sel).\
         filter(Measurement.date >= start).all()
+        session.close()
         temps = list(np.ravel(results))
         return jsonify(temps)
-
+    
+    session = Session(engine) 
     results = session.query(*sel).\
     filter(Measurement.date >= start).\
     filter(Measurement.date <= end).all()
+    session.close()
     temps = list(np.ravel(results))
     return jsonify(temps=temps)
 
-from flask_debugtoolbar import DebugToolbarExtension
-
 if __name__ == '__main__':
-    app.run(debug=True)
     toolbar = DebugToolbarExtension(app)
+    toolbar.init_app(app)
+    app.run(debug=True)
